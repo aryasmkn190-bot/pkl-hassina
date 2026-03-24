@@ -33,6 +33,7 @@ import {
   Save,
   AlertCircle,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
@@ -1266,7 +1267,11 @@ export default function ProfilPage() {
               </div>
               <p className="text-sm font-bold text-slate-900">Pengaturan</p>
             </div>
-            <div className="px-2 py-2">
+            <div className="px-4 py-3 border-b border-slate-100">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tampilan</p>
+                <ThemeToggle />
+              </div>
+              <div className="px-2 py-2">
               <SettingsItem
                 icon={Bell}
                 label="Notifikasi"

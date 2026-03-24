@@ -105,9 +105,9 @@
     --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ── Dark Mode ─────────────────────────────────────────────── */
+/* ── Dark Mode — media query (system preference) ───────────── */
 @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not(.light) {
         --color-background: #0f172a;
         --color-surface: #1e293b;
         --color-surface-elevated: #263144;
@@ -124,6 +124,25 @@
         --color-success-light: #14532d;
         --color-info-light: #0c4a6e;
     }
+}
+
+/* ── Dark Mode — class-based (next-themes manual toggle) ─────── */
+.dark {
+    --color-background: #0f172a;
+    --color-surface: #1e293b;
+    --color-surface-elevated: #263144;
+    --color-foreground: #f1f5f9;
+    --color-muted: #94a3b8;
+    --color-muted-foreground: #64748b;
+    --color-border: #334155;
+    --color-border-strong: #475569;
+    --color-subtle: #334155;
+    --color-primary-light: #1e3a6e;
+    --color-secondary-light: #064e3b;
+    --color-accent-light: #78350f;
+    --color-danger-light: #7f1d1d;
+    --color-success-light: #14532d;
+    --color-info-light: #0c4a6e;
 }
 
 /* ── Base Reset & Defaults ─────────────────────────────────── */

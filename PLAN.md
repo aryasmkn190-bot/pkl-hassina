@@ -569,7 +569,7 @@ documents {
 - [x] Setup Supabase (DB schema, RLS policies, Storage buckets)
 - [x] Autentikasi (login, session, middleware route guard)
 - [x] Design system: warna, typography, komponen dasar
-- [ ] PWA manifest + service worker
+- [x] PWA manifest + service worker (@ducanh2912/next-pwa, icons, splash, InstallPrompt)
 - [x] Layout per role (bottom nav, sidebar, header)
 
 ### Phase 2 — Fitur Siswa (Core)
@@ -591,7 +591,7 @@ documents {
 - [x] Modul pengumuman siswa (Supabase real, pinned, filter type, search)
 - [x] Modul notifikasi siswa (real-time via Supabase Realtime, read/delete)
 - [x] Pengumuman guru (Supabase real, filter target roles)
-- [ ] Modul chat real-time (dalam pengembangan)
+- [x] Modul chat real-time — Supabase Realtime channels, room list, send & receive, auto-scroll, create room baru, unread badge (shared ChatPage.tsx)
 - [ ] Push notification via Web Push API (dalam pengembangan)
 
 ### Phase 5 — Admin & Manajemen
@@ -602,7 +602,7 @@ documents {
 - [x] Manajemen periode PKL (create/edit form, toggle aktif, auto-deactivate)
 - [x] Manajemen jurusan (CRUD departments, hitung siswa & guru per jurusan)
 - [x] Manajemen kelas (CRUD classes, pilih jurusan, hitung siswa)
-- [ ] Modul dokumen/file (dalam pengembangan)
+- [x] Modul dokumen/file admin (upload, delete, filter kategori → shared DokumenPage + Supabase Storage)
 
 ### Phase 6 — Kajur & Polish
 - [x] Kajur dashboard (real Supabase stats: siswa aktif, at-risk, top students, trend, pengumuman)
