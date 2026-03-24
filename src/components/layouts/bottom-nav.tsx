@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +22,12 @@ import {
   Megaphone,
   CalendarCheck,
   Link2,
+  LayoutGrid,
+  X,
+  BookCopy,
+  CalendarDays,
+  FolderOpen,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types";
@@ -316,12 +322,136 @@ function NavItemComponent({ item, isActive, index }: NavItemProps) {
 }
 
 /* ─────────────────────────────────────────────────────────
+   Admin Full Menu Drawer (mobile)
+───────────────────────────────────────────────────────── */
+
+const ADMIN_FULL_MENU = [
+  {
+    group: "UTAMA",
+    items: [
+      { href: "/admin/dashboard", label: "Beranda", icon: Home },
+    ],
+  },
+  {
+    group: "MANAJEMEN",
+    items: [
+      { href: "/admin/users",       label: "Manajemen User",  icon: UserCog },
+      { href: "/admin/jurusan",     label: "Jurusan",         icon: GraduationCap },
+      { href: "/admin/kelas",       label: "Kelas",           icon: BookCopy },
+      { href: "/admin/perusahaan",  label: "Perusahaan",      icon: Building2 },
+      { href: "/admin/penugasan",   label: "Penugasan PKL",   icon: Link2 },
+      { href: "/admin/periode-pkl", label: "Periode PKL",     icon: CalendarDays },
+    ],
+  },
+  {
+    group: "LAPORAN",
+    items: [
+      { href: "/admin/laporan", label: "Laporan", icon: BarChart2 },
+    ],
+  },
+  {
+    group: "KOMUNIKASI",
+    items: [
+      { href: "/admin/pengumuman", label: "Pengumuman", icon: Megaphone },
+      { href: "/admin/dokumen",    label: "Dokumen",    icon: FolderOpen },
+    ],
+  },
+  {
+    group: "SISTEM",
+    items: [
+      { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
+    ],
+  },
+  {
+    group: "AKUN",
+    items: [
+      { href: "/admin/profil", label: "Profil Saya", icon: User },
+    ],
+  },
+];
+
+function AdminMenuDrawer({ onClose }: { onClose: () => void }) {
+  const pathname = usePathname();
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "100%" }}
+          transition={{ type: "spring", stiffness: 350, damping: 35 }}
+          className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl pb-safe max-h-[85vh] flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Handle */}
+          <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mt-3 mb-1" />
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+            <div>
+              <p className="text-base font-extrabold text-slate-900">Menu Admin</p>
+              <p className="text-xs text-slate-400">PKL SMK HASSINA</p>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center active:scale-95 transition-transform">
+              <X className="w-4 h-4 text-slate-600" />
+            </button>
+          </div>
+
+          {/* Menu list */}
+          <div className="overflow-y-auto flex-1 px-4 py-3 space-y-4">
+            {ADMIN_FULL_MENU.map((section) => (
+              <div key={section.group}>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1.5">{section.group}</p>
+                <div className="space-y-0.5">
+                  {section.items.map(({ href, label, icon: Icon }) => {
+                    const isActive = pathname === href || pathname.startsWith(href + "/");
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-3 rounded-2xl transition-all active:scale-[0.98]",
+                          isActive
+                            ? "bg-blue-50 text-blue-700"
+                            : "text-slate-700 hover:bg-slate-50"
+                        )}
+                      >
+                        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0", isActive ? "bg-blue-600" : "bg-slate-100")}>
+                          <Icon className={cn("w-4.5 h-4.5", isActive ? "text-white" : "text-slate-600")} />
+                        </div>
+                        <span className={cn("text-sm font-semibold", isActive ? "text-blue-700" : "text-slate-700")}>{label}</span>
+                        {isActive && (
+                          <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600" />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            <div className="h-2" />
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────
    Bottom Nav
 ───────────────────────────────────────────────────────── */
 
 export function BottomNav({ role, badges }: BottomNavProps) {
   const pathname = usePathname();
   const navItems = getNavItems(role, badges);
+  const [showAdminMenu, setShowAdminMenu] = useState(false);
 
   function isItemActive(item: NavItem): boolean {
     if (item.matchPaths) {
@@ -330,6 +460,47 @@ export function BottomNav({ role, badges }: BottomNavProps) {
       );
     }
     return pathname === item.href || pathname.startsWith(item.href + "/");
+  }
+
+  /* For admin: show 4 main items + "More" button */
+  if (role === "super_admin") {
+    const mainItems = navItems.slice(0, 4);
+    const hasMoreActive = !mainItems.some(isItemActive);
+    return (
+      <>
+        <nav className="bottom-nav" aria-label="Navigasi utama">
+          {mainItems.map((item, index) => (
+            <NavItemComponent
+              key={item.href}
+              item={item}
+              isActive={isItemActive(item)}
+              index={index}
+            />
+          ))}
+          {/* More button */}
+          <button
+            onClick={() => setShowAdminMenu(true)}
+            className={cn("bottom-nav-item tap-highlight-none", hasMoreActive && "active")}
+            aria-label="Semua Menu Admin"
+          >
+            <div className={cn("nav-icon relative", hasMoreActive && "bg-blue-50 rounded-full")}>
+              <motion.span whileTap={{ scale: 0.85 }}>
+                <LayoutGrid className={cn("w-5 h-5", hasMoreActive ? "text-blue-600" : "text-slate-500")} strokeWidth={2} />
+              </motion.span>
+            </div>
+            <motion.span
+              animate={{ fontWeight: hasMoreActive ? 700 : 500, color: hasMoreActive ? "#2563eb" : "#64748b" }}
+              transition={{ duration: 0.15 }}
+              className="nav-label"
+              style={{ fontSize: 10 }}
+            >
+              Menu
+            </motion.span>
+          </button>
+        </nav>
+        {showAdminMenu && <AdminMenuDrawer onClose={() => setShowAdminMenu(false)} />}
+      </>
+    );
   }
 
   return (

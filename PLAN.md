@@ -628,8 +628,9 @@ documents {
 - [x] PWA icons — 22 asset digenerate: icon 72-512px, apple-touch-icon, splash screens, shortcut icons (scripts/generate-icons.mjs)
 - [x] PWA InstallPrompt — A2HS prompt otomatis (Android + iOS), dismiss 7 hari, standalone detection
 - [x] PWA konfigurasi aktif — @ducanh2912/next-pwa, manifest.json, layout meta tags lengkap
-- [ ] Optimasi performa (lazy loading, code splitting)
-- [ ] Dark mode (opsional)
+- [x] Optimasi performa — loading.tsx skeleton per group route, lazy import untuk lib berat (xlsx, print-utils)
+- [x] Dark mode — ThemeToggle component (Terang/Gelap/Sistem), CSS variables .dark class, tampil di halaman profil siswa
+- [x] Push dan Commit ke GitHub — semua fitur production-ready ✅
 
 ---
 
