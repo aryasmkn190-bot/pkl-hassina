@@ -26,6 +26,9 @@ import {
   Mail,
   Lock,
   AlertCircle,
+  Hash,
+  BookOpen,
+  Building2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatDate } from "@/lib/utils";
@@ -419,6 +422,212 @@ function ImportExcelPanel({ onClose, onSuccess }: { onClose: () => void; onSucce
   );
 }
 
+/* ── Student Data Section ────────────────────────────────── */
+
+interface StudentRecord {
+  id?: string;
+  nis: string;
+  department_id: string | null;
+  class_id: string | null;
+  address: string;
+  parent_name: string;
+  parent_phone: string;
+}
+
+function StudentDataSection({ profileId }: { profileId: string }) {
+  const supabase = createClient();
+  const [student, setStudent] = useState<StudentRecord | null>(null);
+  const [departments, setDepartments] = useState<{ id: string; name: string; code: string }[]>([]);
+  const [classes, setClasses] = useState<{ id: string; name: string; department_id: string | null }[]>([]);
+  const [form, setForm] = useState<StudentRecord>({
+    nis: "", department_id: null, class_id: null, address: "", parent_name: "", parent_phone: "",
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const set = (k: keyof StudentRecord, v: string | null) => setForm((p) => ({ ...p, [k]: v }));
+
+  useEffect(() => {
+    const loadAll = async () => {
+      setLoading(true);
+      const [stuRes, deptRes, clsRes] = await Promise.all([
+        supabase.from("students").select("id, nis, department_id, class_id, address, parent_name, parent_phone")
+          .eq("profile_id", profileId).maybeSingle(),
+        supabase.from("departments").select("id, name, code").order("code"),
+        supabase.from("classes").select("id, name, department_id").order("name"),
+      ]);
+      setDepartments((deptRes.data ?? []) as { id: string; name: string; code: string }[]);
+      setClasses((clsRes.data ?? []) as { id: string; name: string; department_id: string | null }[]);
+      if (stuRes.data) {
+        setStudent(stuRes.data as StudentRecord);
+        setForm(stuRes.data as StudentRecord);
+      }
+      setLoading(false);
+    };
+    loadAll();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId]);
+
+  const filteredClasses = form.department_id
+    ? classes.filter((c) => c.department_id === form.department_id)
+    : classes;
+
+  const handleSave = async () => {
+    if (!form.nis?.trim()) { toast.error("NIS wajib diisi"); return; }
+    setSaving(true);
+    try {
+      const payload = {
+        profile_id: profileId,
+        nis: form.nis.trim(),
+        department_id: form.department_id,
+        class_id: form.class_id,
+        address: form.address?.trim() || null,
+        parent_name: form.parent_name?.trim() || null,
+        parent_phone: form.parent_phone?.trim() || null,
+      };
+      if (student?.id) {
+        const { error } = await supabase.from("students").update(payload).eq("id", student.id);
+        if (error) throw error;
+      } else {
+        const { data: newStu, error } = await supabase.from("students").insert(payload).select().single();
+        if (error) throw error;
+        setStudent(newStu as StudentRecord);
+      }
+      toast.success("Data siswa disimpan ✅");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Gagal menyimpan");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3">
+        <div className="h-4 w-24 bg-slate-100 rounded animate-pulse" />
+        <div className="h-8 bg-slate-100 rounded-xl animate-pulse" />
+        <div className="h-8 bg-slate-100 rounded-xl animate-pulse" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-emerald-50">
+        <div className="flex items-center gap-2">
+          <GraduationCap className="w-4 h-4 text-emerald-600" />
+          <p className="text-sm font-bold text-emerald-800">Data Siswa</p>
+        </div>
+        <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full",
+          student?.id ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700")}>
+          {student?.id ? "✓ Sudah diisi" : "⚠ Belum diisi"}
+        </span>
+      </div>
+
+      <div className="p-4 space-y-4">
+        {/* NIS */}
+        <div>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <Hash className="w-3.5 h-3.5 text-slate-400" />
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">NIS *</p>
+          </div>
+          <input value={form.nis ?? ""} onChange={(e) => set("nis", e.target.value)}
+            placeholder="Nomor Induk Siswa"
+            className="w-full text-sm text-slate-800 placeholder:text-slate-300 outline-none border border-slate-200 rounded-xl px-3 py-2.5" />
+        </div>
+
+        {/* Jurusan */}
+        <div>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <Building2 className="w-3.5 h-3.5 text-slate-400" />
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Jurusan</p>
+          </div>
+          {departments.length === 0 ? (
+            <p className="text-xs text-slate-400 italic">Belum ada jurusan. Buat jurusan dulu di menu Jurusan.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => { set("department_id", null); set("class_id", null); }}
+                className={cn("px-3 h-8 rounded-full text-xs font-bold transition-all",
+                  !form.department_id ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600")}>
+                Belum ditentukan
+              </button>
+              {departments.map((d) => (
+                <button key={d.id} onClick={() => { set("department_id", d.id); set("class_id", null); }}
+                  className={cn("px-3 h-8 rounded-full text-xs font-bold transition-all",
+                    form.department_id === d.id ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600")}>
+                  {d.code}
+                </button>
+              ))}
+            </div>
+          )}
+          {form.department_id && (
+            <p className="text-xs text-emerald-700 font-medium mt-1.5">
+              {departments.find((d) => d.id === form.department_id)?.name}
+            </p>
+          )}
+        </div>
+
+        {/* Kelas */}
+        <div>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kelas</p>
+          </div>
+          {filteredClasses.length === 0 ? (
+            <p className="text-xs text-slate-400 italic">
+              {form.department_id ? "Belum ada kelas untuk jurusan ini" : "Pilih jurusan dulu untuk melihat kelas"}
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => set("class_id", null)}
+                className={cn("px-3 h-8 rounded-full text-xs font-bold transition-all",
+                  !form.class_id ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600")}>
+                Belum ditentukan
+              </button>
+              {filteredClasses.map((c) => (
+                <button key={c.id} onClick={() => set("class_id", c.id)}
+                  className={cn("px-3 h-8 rounded-full text-xs font-bold transition-all",
+                    form.class_id === c.id ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600")}>
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Alamat */}
+        <div>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Alamat</p>
+          <input value={form.address ?? ""} onChange={(e) => set("address", e.target.value)}
+            placeholder="Jl. Contoh No. 1, Kota"
+            className="w-full text-sm text-slate-800 placeholder:text-slate-300 outline-none border border-slate-200 rounded-xl px-3 py-2.5" />
+        </div>
+
+        {/* Orang tua */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nama Ortu</p>
+            <input value={form.parent_name ?? ""} onChange={(e) => set("parent_name", e.target.value)}
+              placeholder="Nama Orang Tua"
+              className="w-full text-sm text-slate-800 placeholder:text-slate-300 outline-none border border-slate-200 rounded-xl px-3 py-2.5" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">HP Ortu</p>
+            <input value={form.parent_phone ?? ""} onChange={(e) => set("parent_phone", e.target.value)}
+              placeholder="08xxxxxxxxxx"
+              className="w-full text-sm text-slate-800 placeholder:text-slate-300 outline-none border border-slate-200 rounded-xl px-3 py-2.5" />
+          </div>
+        </div>
+
+        <button onClick={handleSave} disabled={saving}
+          className="w-full h-11 rounded-2xl bg-emerald-600 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 disabled:opacity-60 transition-colors">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {student?.id ? "Perbarui Data Siswa" : "Simpan Data Siswa"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── User Detail ──────────────────────────────────────── */
 
 function UserDetail({
@@ -486,6 +695,10 @@ function UserDetail({
           </div>
           {user.role === "super_admin" && <p className="text-[11px] text-slate-400 mt-2">Status Super Admin tidak dapat diubah</p>}
         </div>
+
+        {/* Siswa data section */}
+        {user.role === "siswa" && <StudentDataSection profileId={user.id} />}
+
       </div>
     </motion.div>
   );
