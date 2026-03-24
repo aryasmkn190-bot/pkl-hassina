@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
-import { InstallPrompt } from "@/components/InstallPrompt";
+
 
 /* ─────────────────────────────────────────────────────────
    Font
@@ -57,13 +57,13 @@ export const metadata: Metadata = {
       "Kelola presensi, jurnal harian, dan monitoring PKL siswa SMK HASSINA secara digital.",
   },
 
-  // PWA
-  manifest: "/manifest.json",
+  // PWA — tetap bisa "Add to Home" tanpa offline cache
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "PKL HASSINA",
   },
+
 
   // Icons
   icons: {
@@ -163,9 +163,24 @@ export default function RootLayout({
       >
         <Providers>
           {children}
-          <InstallPrompt />
         </Providers>
+        {/* Unregister old PWA service worker & clear cache */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(regs) {
+                  regs.forEach(function(r) { r.unregister(); });
+                });
+                caches.keys().then(function(names) {
+                  names.forEach(function(n) { caches.delete(n); });
+                });
+              }
+            `,
+          }}
+        />
       </body>
+
     </html>
   );
 }
