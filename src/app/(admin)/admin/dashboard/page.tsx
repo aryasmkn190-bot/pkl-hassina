@@ -104,6 +104,18 @@ export default function AdminDashboardPage() {
       }
     } catch (err) {
       console.error("adminDashboard load error:", err);
+      // Jika gagal load, tampilkan stat 0 daripada skeleton tanpa akhir
+      if (!stats) {
+        setStats({
+          total_users: 0,
+          active_students: 0,
+          total_teachers: 0,
+          total_companies: 0,
+          pending_presensi: 0,
+          pending_jurnal: 0,
+          pending_izin: 0,
+        });
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
