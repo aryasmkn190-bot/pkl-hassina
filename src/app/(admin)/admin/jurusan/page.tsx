@@ -45,9 +45,13 @@ function JurusanForm({
       return;
     }
     setSaving(true);
-    await onSave(form);
-    setSaving(false);
+    try {
+      await onSave(form);
+    } finally {
+      setSaving(false);
+    }
   };
+
 
   return (
     <motion.div

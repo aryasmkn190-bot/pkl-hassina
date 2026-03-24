@@ -60,9 +60,13 @@ function CompanyForm({
   const handleSave = async () => {
     if (!form.name?.trim()) { toast.error("Nama perusahaan wajib diisi"); return; }
     setSaving(true);
-    await onSave(form);
-    setSaving(false);
+    try {
+      await onSave(form);
+    } finally {
+      setSaving(false);
+    }
   };
+
 
   return (
     <motion.div

@@ -41,8 +41,11 @@ function KelasForm({
   const handleSave = async () => {
     if (!form.name?.trim()) { toast.error("Nama kelas wajib diisi"); return; }
     setSaving(true);
-    await onSave(form);
-    setSaving(false);
+    try {
+      await onSave(form);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
