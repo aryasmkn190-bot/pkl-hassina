@@ -206,19 +206,32 @@ export default function AdminPeriodePKLPage() {
 
   const handleSave = async (data: Partial<PKLPeriod>) => {
     try {
+      /* Buat payload eksplisit — jangan spread seluruh data agar tidak ada field asing */
+      const payload = {
+        name: data.name!,
+        academic_year: data.academic_year ?? null,
+        start_date: data.start_date!,
+        end_date: data.end_date!,
+        check_in_start: data.check_in_start ?? "07:00",
+        check_in_end: data.check_in_end ?? "08:00",
+        check_out_start: data.check_out_start ?? "15:00",
+        check_out_end: data.check_out_end ?? "17:00",
+        is_active: data.is_active ?? false,
+      };
+
       if (data.id) {
-        const { error } = await supabase.from("pkl_periods").update(data).eq("id", data.id);
+        const { error } = await supabase.from("pkl_periods").update(payload).eq("id", data.id);
         if (error) throw error;
-        setPeriods((prev) => prev.map((p) => p.id === data.id ? { ...p, ...data } as PKLPeriod : p));
+        setPeriods((prev) => prev.map((p) => p.id === data.id ? { ...p, ...payload } as PKLPeriod : p));
         toast.success("Periode diperbarui ✅");
       } else {
         // Jika is_active, nonaktifkan yang lain dulu
-        if (data.is_active) {
+        if (payload.is_active) {
           await supabase.from("pkl_periods").update({ is_active: false }).eq("is_active", true);
         }
-        const { data: newData, error } = await supabase.from("pkl_periods").insert(data).select().single();
+        const { data: newData, error } = await supabase.from("pkl_periods").insert(payload).select().single();
         if (error) throw error;
-        setPeriods((prev) => data.is_active
+        setPeriods((prev) => payload.is_active
           ? [newData as PKLPeriod, ...prev.map((p) => ({ ...p, is_active: false }))]
           : [newData as PKLPeriod, ...prev]
         );

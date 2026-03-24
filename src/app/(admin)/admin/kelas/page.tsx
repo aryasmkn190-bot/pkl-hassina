@@ -158,17 +158,22 @@ export default function AdminKelasPage() {
 
   const handleSave = async (data: Partial<Kelas>) => {
     try {
+      const payload = {
+        name: data.name!,
+        department_id: data.department_id ?? null,
+        academic_year: data.academic_year ?? null,
+      };
+
       if (data.id) {
-        const { error } = await supabase.from("classes").update({
-          name: data.name, department_id: data.department_id, academic_year: data.academic_year,
-        }).eq("id", data.id);
+        const { error } = await supabase.from("classes").update(payload).eq("id", data.id);
         if (error) throw error;
-        setKelas((prev) => prev.map((k) => k.id === data.id ? { ...k, ...data, dept_code: departments.find((d) => d.id === data.department_id)?.code ?? "-" } : k));
+        setKelas((prev) => prev.map((k) => k.id === data.id
+          ? { ...k, ...data, dept_code: departments.find((d) => d.id === data.department_id)?.code ?? "-" }
+          : k));
         toast.success("Kelas diperbarui ✅");
       } else {
-        const { data: newData, error } = await supabase.from("classes").insert({
-          name: data.name!, department_id: data.department_id, academic_year: data.academic_year,
-        }).select().single();
+        const { data: newData, error } = await supabase.from("classes")
+          .insert(payload).select().single();
         if (error) throw error;
         setKelas((prev) => [{
           ...newData,
