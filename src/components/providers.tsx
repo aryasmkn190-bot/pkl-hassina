@@ -59,24 +59,48 @@ function AuthListener() {
   const supabase = createClient();
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
 
-    // Ambil sesi awal
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        // Ambil profil dari database
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-        if (profile) {
-          setProfile(profile);
-        }
+    // Timeout fallback — jika getSession tidak selesai dalam 5 detik, paksa loading false
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        console.warn("[AuthListener] getSession timeout — forcing loading false");
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    }, 5000);
+
+    const init = async () => {
+      setLoading(true);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (cancelled) return;
+
+        if (error) {
+          console.error("[AuthListener] getSession error:", error.message);
+          setLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          setUser(session.user);
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+          if (!cancelled && profile) {
+            setProfile(profile);
+          }
+        }
+      } catch (err) {
+        console.error("[AuthListener] unexpected error:", err);
+      } finally {
+        clearTimeout(timeout);
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    init();
 
     // Dengarkan perubahan auth
     const {
@@ -89,9 +113,7 @@ function AuthListener() {
           .select("*")
           .eq("id", session.user.id)
           .single();
-        if (profile) {
-          setProfile(profile);
-        }
+        if (profile) setProfile(profile);
         setLoading(false);
         router.refresh();
       }
@@ -108,6 +130,8 @@ function AuthListener() {
     });
 
     return () => {
+      cancelled = true;
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { BottomNav } from "@/components/layouts/bottom-nav";
@@ -241,6 +241,20 @@ export default function AdminLayout({
   const router = useRouter();
   const { profile, isLoading, isHydrated, role } = useAuthStore();
   const supabase = createClient();
+  // Lapisan kedua: jika loading masih true setelah 8 detik → redirect login
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && !isHydrated) return;
+    const t = setTimeout(() => {
+      if (isLoading || !isHydrated) {
+        console.warn("[AdminLayout] Auth loading timeout — redirecting to login");
+        setLoadingTimedOut(true);
+        router.replace("/login");
+      }
+    }, 8000);
+    return () => clearTimeout(t);
+  }, [isLoading, isHydrated, router]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -248,6 +262,10 @@ export default function AdminLayout({
       router.replace("/login");
     }
   }, [profile, isLoading, isHydrated, role, router]);
+
+  if (loadingTimedOut) {
+    return <LoadingScreen message="Mengalihkan ke login..." />;
+  }
 
   if (!isHydrated || isLoading) {
     return <LoadingScreen message="Memuat halaman administrator..." />;
