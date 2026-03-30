@@ -383,7 +383,7 @@ export default function GuruJurnalPage() {
       // Ambil jurnal berdasarkan assignment
       const { data: journalData, error } = await supabase
         .from("journals")
-        .select("id, student_id, date, title, content, status, photos, submitted_at, feedback_text, feedback_rating")
+        .select("id, student_id, date, title, content, status, photos, submitted_at, journal_feedbacks(content, rating)")
         .in("pkl_assignment_id", assignmentIds)
         .neq("status", "draft")
         .order("submitted_at", { ascending: false })
@@ -393,6 +393,7 @@ export default function GuruJurnalPage() {
 
       const mapped: JournalItem[] = (journalData ?? []).map((j) => {
         const info = studentMap.get(j.student_id) ?? { name: "Siswa", nis: "-" };
+        const fBacks = (j as any).journal_feedbacks ?? [];
         return {
           id: j.id,
           student_id: j.student_id,
@@ -404,8 +405,8 @@ export default function GuruJurnalPage() {
           status: j.status as JournalStatus,
           photos: Array.isArray(j.photos) ? (j.photos as string[]) : [],
           submitted_at: j.submitted_at,
-          feedback_text: j.feedback_text ?? null,
-          feedback_rating: j.feedback_rating ?? null,
+          feedback_text: fBacks.length > 0 ? fBacks[0].content : null,
+          feedback_rating: fBacks.length > 0 ? fBacks[0].rating : null,
         };
       });
 
@@ -431,20 +432,38 @@ export default function GuruJurnalPage() {
     rating: number,
     action: "reviewed" | "revision"
   ) => {
-    const { error } = await supabase
+    // 1. Dapatkan teacher_id
+    const { data: tData } = await supabase.from("teachers").select("id").eq("profile_id", profile?.id).single();
+    if (!tData?.id) {
+      toast.error("Bukan pembimbing");
+      return;
+    }
+
+    // 2. Insert ke journal_feedbacks
+    const { error: fErr } = await supabase.from("journal_feedbacks").insert({
+      journal_id: id,
+      teacher_id: tData.id,
+      content: feedback,
+      rating: rating,
+    });
+    
+    if (fErr) {
+      toast.error("Gagal menyimpan feedback");
+      return;
+    }
+
+    // 3. Update status jurnal
+    const { error: jErr } = await supabase
       .from("journals")
       .update({
         status: action,
-        feedback_text: feedback,
-        feedback_rating: rating,
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: profile?.id,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", id);
 
-    if (error) {
-      toast.error("Gagal menyimpan feedback");
-      throw error;
+    if (jErr) {
+      toast.error("Gagal mengubah status jurnal");
+      return;
     }
 
     setJournals((prev) =>
