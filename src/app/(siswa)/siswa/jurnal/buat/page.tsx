@@ -569,10 +569,6 @@ function DateSelector({
 
       {/* Date input */}
       <div className="relative flex items-center">
-        <Calendar
-          className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none"
-          aria-hidden="true"
-        />
         <input
           type="date"
           value={value}
@@ -580,9 +576,9 @@ function DateSelector({
           max={today}
           min={minDate}
           className={cn(
-            "input-base pl-10",
+            "input-base",
             error && "input-error",
-            "cursor-pointer"
+            "cursor-pointer w-full"
           )}
           aria-invalid={!!error}
           aria-describedby={error ? "date-error" : undefined}

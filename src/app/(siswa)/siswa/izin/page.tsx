@@ -438,10 +438,6 @@ function StepFillDetail({
           <span className="text-red-500 ml-1">*</span>
         </label>
         <div className="relative flex items-center">
-          <Calendar
-            className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none"
-            aria-hidden="true"
-          />
           <input
             id="absence-date"
             type="date"
@@ -450,7 +446,7 @@ function StepFillDetail({
             max={maxDate}
             min={minDate}
             className={cn(
-              "input-base pl-10 cursor-pointer",
+              "input-base cursor-pointer w-full",
               dateError && "input-error"
             )}
           />
