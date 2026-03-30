@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { BottomNav } from "@/components/layouts/bottom-nav";
@@ -241,21 +241,9 @@ export default function AdminLayout({
   const router = useRouter();
   const { profile, isLoading, isHydrated, role } = useAuthStore();
   const supabase = createClient();
-  // Lapisan kedua: jika loading masih true setelah 8 detik → redirect login
-  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading && !isHydrated) return;
-    const t = setTimeout(() => {
-      if (isLoading || !isHydrated) {
-        console.warn("[AdminLayout] Auth loading timeout — redirecting to login");
-        setLoadingTimedOut(true);
-        router.replace("/login");
-      }
-    }, 8000);
-    return () => clearTimeout(t);
-  }, [isLoading, isHydrated, router]);
-
+  // Redirect ke login HANYA ketika loading selesai dan tidak ada profile valid.
+  // Jangan redirect saat masih loading — tunggu sampai auth selesai diverifikasi.
   useEffect(() => {
     if (!isHydrated) return;
     if (!isLoading && (!profile || role !== "super_admin")) {
@@ -263,15 +251,19 @@ export default function AdminLayout({
     }
   }, [profile, isLoading, isHydrated, role, router]);
 
-  if (loadingTimedOut) {
-    return <LoadingScreen message="Mengalihkan ke login..." />;
-  }
-
-  if (!isHydrated || isLoading) {
+  // Belum terhidrasi sama sekali → tampilkan loading
+  if (!isHydrated) {
     return <LoadingScreen message="Memuat halaman administrator..." />;
   }
 
+  // Sudah terhidrasi tapi tidak ada profile → tunggu loading selesai
+  // (optimistic: jika ada profile di cache, langsung tampilkan konten)
   if (!profile || role !== "super_admin") {
+    // isLoading masih true berarti sedang verifikasi — tampilkan loading sebentar
+    if (isLoading) {
+      return <LoadingScreen message="Memuat halaman administrator..." />;
+    }
+    // isLoading false tapi tidak ada profile → redirect (ditangani useEffect)
     return <LoadingScreen message="Mengalihkan..." />;
   }
 
