@@ -312,13 +312,15 @@ export default function GuruPresensiPage() {
         }
       }
 
-      // Ambil catatan kehadiran berdasarkan assignment
-      const { data: attData, error } = await supabase
+      const studentIds = Array.from(studentMap.keys());
+
+      // Ambil catatan kehadiran berdasarkan mahasiswa
+      const { data: attData, error } = studentIds.length > 0 ? await supabase
         .from("attendance")
         .select("id, student_id, date, type, status, address, is_within_radius, selfie_url, created_at")
-        .in("pkl_assignment_id", assignmentIds)
+        .in("student_id", studentIds)
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(100) : { data: [], error: null };
 
       if (error) throw error;
 

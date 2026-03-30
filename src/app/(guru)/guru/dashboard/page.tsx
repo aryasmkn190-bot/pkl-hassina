@@ -923,28 +923,28 @@ export default function GuruDashboardPage() {
         : { data: [] };
 
       // ── 3. Pending presensi (belum diverifikasi) ──
-      const { data: pendingAtt } = assignmentIds.length
+      const { data: pendingAtt } = studentIds.length
         ? await supabase
             .from("attendance")
             .select(`
               id, type, status, created_at, address,
               students (profiles (full_name, avatar_url))
             `)
-            .in("pkl_assignment_id", assignmentIds)
+            .in("student_id", studentIds)
             .eq("status", "pending")
             .order("created_at", { ascending: false })
             .limit(5)
         : { data: [] };
 
       // ── 4. Pending jurnal (submitted, belum di-review) ──
-      const { data: pendingJournals } = assignmentIds.length
+      const { data: pendingJournals } = studentIds.length
         ? await supabase
             .from("journals")
             .select(`
               id, title, date, submitted_at,
               students (profiles (full_name, avatar_url))
             `)
-            .in("pkl_assignment_id", assignmentIds)
+            .in("student_id", studentIds)
             .eq("status", "submitted")
             .order("submitted_at", { ascending: true })
             .limit(5)

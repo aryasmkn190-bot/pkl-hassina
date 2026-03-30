@@ -83,12 +83,12 @@ export default function GuruLaporanPage() {
         supabase
           .from("attendance")
           .select("status")
-          .in("pkl_assignment_id", assignmentIds)
+          .in("student_id", studentIds)
           .eq("type", "check_in"),
         supabase
           .from("journals")
           .select("status")
-          .in("pkl_assignment_id", assignmentIds),
+          .in("student_id", studentIds),
         supabase
           .from("absence_requests")
           .select("status")

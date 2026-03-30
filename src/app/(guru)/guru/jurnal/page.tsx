@@ -380,14 +380,16 @@ export default function GuruJurnalPage() {
         }
       }
 
-      // Ambil jurnal berdasarkan assignment
-      const { data: journalData, error } = await supabase
+      const studentIds = Array.from(studentMap.keys());
+
+      // Ambil jurnal berdasarkan mahasiswa jika ada
+      const { data: journalData, error } = studentIds.length > 0 ? await supabase
         .from("journals")
         .select("id, student_id, date, title, content, status, photos, submitted_at, journal_feedbacks(content, rating)")
-        .in("pkl_assignment_id", assignmentIds)
+        .in("student_id", studentIds)
         .neq("status", "draft")
         .order("submitted_at", { ascending: false })
-        .limit(100);
+        .limit(100) : { data: [], error: null };
 
       if (error) throw error;
 
