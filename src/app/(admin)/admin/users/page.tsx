@@ -113,7 +113,7 @@ function AddUserForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: (
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: "100%" }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-slate-50 overflow-y-auto"
     >
       <header className="sticky top-0 z-10 flex items-center gap-3 px-4 h-[60px] bg-white/90 backdrop-blur-xl border-b border-slate-200/60">
         <button onClick={onClose} className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
@@ -127,7 +127,7 @@ function AddUserForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: (
         </button>
       </header>
 
-      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4 pb-8">
+      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4 pb-28">
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <div className="flex items-center gap-2 mb-2">
             <Mail className="w-3.5 h-3.5 text-slate-400" />
@@ -318,7 +318,7 @@ function ImportExcelPanel({ onClose, onSuccess }: { onClose: () => void; onSucce
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: "100%" }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-slate-50 overflow-y-auto"
     >
       <header className="sticky top-0 z-10 flex items-center gap-3 px-4 h-[60px] bg-white/90 backdrop-blur-xl border-b border-slate-200/60">
         <button onClick={onClose} className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
@@ -334,7 +334,7 @@ function ImportExcelPanel({ onClose, onSuccess }: { onClose: () => void; onSucce
         )}
       </header>
 
-      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4 pb-8">
+      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4 pb-28">
         {/* Download template */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <div className="flex items-center gap-3">
@@ -645,7 +645,7 @@ function UserDetail({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: "100%" }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-slate-50 overflow-y-auto"
     >
       <header className="sticky top-0 z-10 flex items-center gap-3 px-4 h-[60px] bg-white/90 backdrop-blur-xl border-b border-slate-200/60">
         <button onClick={onClose} className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
@@ -655,7 +655,7 @@ function UserDetail({
         <span className={cn("px-2.5 py-1 rounded-full text-xs font-bold", rc.bg, rc.color)}>{rc.label}</span>
       </header>
 
-      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4 pb-8">
+      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4 pb-28">
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center">
