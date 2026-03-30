@@ -61,13 +61,14 @@ function AuthListener() {
   useEffect(() => {
     let cancelled = false;
 
-    // Timeout fallback — jika getSession tidak selesai dalam 5 detik, paksa loading false
+    // Timeout fallback — jika getSession tidak selesai dalam 12 detik, paksa loading false
+    // (Supabase free tier bisa lambat saat cold start)
     const timeout = setTimeout(() => {
       if (!cancelled) {
         console.warn("[AuthListener] getSession timeout — forcing loading false");
         setLoading(false);
       }
-    }, 5000);
+    }, 12000);
 
     const init = async () => {
       setLoading(true);

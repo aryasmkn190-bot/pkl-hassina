@@ -1,11 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { ROLE_DASHBOARD } from "@/lib/constants";
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,80 +25,28 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Ambil data user yang sedang login
+  const pathname = request.nextUrl.pathname;
+
+  // Rute publik — tidak perlu cek auth
+  const publicRoutes = ["/login", "/register", "/forgot-password"];
+  if (publicRoutes.some((r) => pathname.startsWith(r))) {
+    return supabaseResponse;
+  }
+
+  // Hanya cek apakah session ada via cookie (tanpa hit ke Supabase server)
+  // getUser() digunakan untuk validasi token secara aman
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-
-  // Rute publik yang tidak memerlukan autentikasi
-  const publicRoutes = ["/login", "/register", "/forgot-password"];
-  if (publicRoutes.includes(pathname)) {
-    if (user) {
-      // Jika sudah login, ambil role dan redirect ke dashboard yang sesuai
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      if (profile) {
-        const dashboard = ROLE_DASHBOARD[profile.role] || "/login";
-        return NextResponse.redirect(new URL(dashboard, request.url));
-      }
-    }
-    return supabaseResponse;
-  }
-
-  // Rute yang memerlukan autentikasi — redirect ke login jika belum login
   if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    // Belum login — redirect ke login
+    const loginUrl = new URL("/login", request.url);
+    return NextResponse.redirect(loginUrl);
   }
 
-  // Ambil profil pengguna untuk pengecekan role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile) {
-    // Profil tidak ditemukan, paksa logout dan redirect ke login
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  // Kontrol akses berbasis role (RBAC)
-  if (pathname.startsWith("/siswa") && profile.role !== "siswa") {
-    return NextResponse.redirect(
-      new URL(ROLE_DASHBOARD[profile.role], request.url)
-    );
-  }
-  if (
-    pathname.startsWith("/guru") &&
-    profile.role !== "guru_pembimbing"
-  ) {
-    return NextResponse.redirect(
-      new URL(ROLE_DASHBOARD[profile.role], request.url)
-    );
-  }
-  if (
-    pathname.startsWith("/kajur") &&
-    profile.role !== "ketua_jurusan"
-  ) {
-    return NextResponse.redirect(
-      new URL(ROLE_DASHBOARD[profile.role], request.url)
-    );
-  }
-  if (
-    pathname.startsWith("/admin") &&
-    profile.role !== "super_admin"
-  ) {
-    return NextResponse.redirect(
-      new URL(ROLE_DASHBOARD[profile.role], request.url)
-    );
-  }
-
+  // Role-based access control sekarang ditangani di masing-masing layout (client-side)
+  // agar tidak perlu query DB di setiap request middleware
   return supabaseResponse;
 }
 
@@ -109,12 +54,11 @@ export const config = {
   matcher: [
     /*
      * Cocokkan semua path kecuali:
-     * - _next/static  (file statis Next.js)
-     * - _next/image   (optimisasi gambar Next.js)
-     * - favicon.ico
-     * - folder icons/
-     * - file gambar (svg, png, jpg, jpeg, gif, webp)
+     * - _next/static & _next/image (asset Next.js)
+     * - favicon.ico, icons/, screenshot/
+     * - file gambar statis
+     * - template Excel & file publik lain
      */
-    "/((?!_next/static|_next/image|favicon.ico|icons|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icons|screenshots|.*\\.(?:svg|png|jpg|jpeg|gif|webp|xlsx|ico)$).*)",
   ],
 };
