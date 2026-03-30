@@ -104,8 +104,8 @@ export default function KajurProfilPage() {
       <AnimatePresence>
         {showSignOut && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/40" onClick={() => setShowSignOut(false)} />
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="fixed bottom-6 left-4 right-4 z-50 bg-white rounded-3xl p-5 shadow-2xl max-w-sm mx-auto">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] bg-black/40" onClick={() => setShowSignOut(false)} />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="fixed bottom-6 left-4 right-4 z-[60] bg-white rounded-3xl p-5 shadow-2xl max-w-sm mx-auto">
               <p className="text-base font-bold text-slate-900 mb-1">Keluar?</p>
               <p className="text-xs text-slate-500 mb-4">Konfirmasi untuk sign out dari akun</p>
               <div className="flex gap-3">

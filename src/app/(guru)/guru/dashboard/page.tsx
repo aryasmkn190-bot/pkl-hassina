@@ -847,7 +847,7 @@ function QuickActions({
 ───────────────────────────────────────────────────────── */
 
 export default function GuruDashboardPage() {
-  const { profile } = useAuthStore();
+  const { profile, isLoading: isAuthLoading } = useAuthStore();
   const router = useRouter();
   const supabase = createClient();
 
@@ -861,7 +861,7 @@ export default function GuruDashboardPage() {
 
   /* ── Load data ─────────────────────────────────────── */
 
-  const loadData = async (showRefreshing = false) => {
+  const loadData = React.useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true);
     else setLoading(true);
 
@@ -1071,15 +1071,17 @@ export default function GuruDashboardPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
-
+  }, [profile?.id]); // depend on profile.id to avoid stale closures
 
   useEffect(() => {
+    // Prevent fetching if auth is still synchronizing/loading
+    if (isAuthLoading) return;
+
     loadData();
     // Auto-refresh every 2 minutes
     const interval = setInterval(() => loadData(true), 2 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [loadData, isAuthLoading]);
 
   /* ── Render ─────────────────────────────────────────── */
 

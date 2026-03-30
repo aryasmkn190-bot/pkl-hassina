@@ -61,62 +61,44 @@ function AuthListener() {
   useEffect(() => {
     let cancelled = false;
 
-    // Timeout fallback — jika getSession tidak selesai dalam 12 detik, paksa loading false
-    // (Supabase free tier bisa lambat saat cold start)
+    // Timeout fallback — jika auth lambat
     const timeout = setTimeout(() => {
-      if (!cancelled) {
-        console.warn("[AuthListener] getSession timeout — forcing loading false");
-        setLoading(false);
-      }
+      if (!cancelled) setLoading(false);
     }, 12000);
 
-    const init = async () => {
-      setLoading(true);
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (cancelled) return;
-
-        if (error) {
-          console.error("[AuthListener] getSession error:", error.message);
-          setLoading(false);
-          return;
-        }
-
-        if (session?.user) {
-          setUser(session.user);
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-          if (!cancelled && profile) {
-            setProfile(profile);
-          }
-        }
-      } catch (err) {
-        console.error("[AuthListener] unexpected error:", err);
-      } finally {
-        clearTimeout(timeout);
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    init();
-
-    // Dengarkan perubahan auth
+    // Dengarkan perubahan auth (termasuk session pertama kali saat aplikasi dimuat)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        setUser(session.user);
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-        if (profile) setProfile(profile);
-        setLoading(false);
-        router.refresh();
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled) return;
+
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+        if (session?.user) {
+          setUser(session.user);
+          
+          // CRITICAL FIX: Jalankan fetch di luar cycle onAuthStateChange 
+          // agar Mutex internal dari Supabase (gotrue-js) tidak kena deadlock
+          setTimeout(async () => {
+            try {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", session.user.id)
+                .single();
+                
+              if (!cancelled && profile) setProfile(profile);
+            } catch (err) {
+              console.error("[AuthListener] proxy fetch error:", err);
+            } finally {
+              clearTimeout(timeout);
+              if (!cancelled) setLoading(false);
+              if (event === "SIGNED_IN") router.refresh();
+            }
+          }, 0);
+        } else {
+          clearTimeout(timeout);
+          if (!cancelled) setLoading(false);
+        }
       }
 
       if (event === "SIGNED_OUT") {

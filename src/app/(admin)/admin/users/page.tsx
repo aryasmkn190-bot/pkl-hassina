@@ -34,6 +34,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { useAuthStore } from "@/stores/auth-store";
 
 type UserRole = "super_admin" | "ketua_jurusan" | "guru_pembimbing" | "siswa";
 
@@ -58,7 +59,6 @@ const VALID_ROLES: UserRole[] = ["siswa", "guru_pembimbing", "ketua_jurusan", "s
 /* ── Tambah User Form ────────────────────────────────────── */
 
 function AddUserForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const supabase = createClient();
   const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "siswa" as UserRole, phone: "" });
   const [saving, setSaving] = useState(false);
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
@@ -74,27 +74,19 @@ function AddUserForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: (
     }
     setSaving(true);
     try {
-      // Gunakan Supabase Admin API via signUp (client-side workaround)
-      const { data, error } = await supabase.auth.signUp({
-        email: form.email.trim(),
-        password: form.password,
-        options: {
-          data: {
-            full_name: form.full_name.trim(),
-            role: form.role,
-          },
-        },
-      });
-      if (error) throw error;
-
-      // Update profile role & phone
-      if (data.user) {
-        await supabase.from("profiles").update({
+      const res = await fetch("/api/admin/create-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email.trim(),
+          password: form.password,
           full_name: form.full_name.trim(),
           role: form.role,
           phone: form.phone?.trim() || null,
-        }).eq("id", data.user.id);
-      }
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal menambah user");
 
       toast.success(`User "${form.full_name}" berhasil ditambahkan ✅`);
       onSuccess();
@@ -274,23 +266,19 @@ function ImportExcelPanel({ onClose, onSuccess }: { onClose: () => void; onSucce
       if (row.status !== "pending") continue;
 
       try {
-        const { data, error } = await supabase.auth.signUp({
-          email: row.email,
-          password: row.password,
-          options: {
-            data: { full_name: row.full_name, role: row.role },
-          },
-        });
-        if (error) throw error;
-
-        // Update profile
-        if (data.user) {
-          await supabase.from("profiles").update({
+        const res = await fetch("/api/admin/create-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: row.email,
+            password: row.password,
             full_name: row.full_name,
-            role: row.role as UserRole,
+            role: row.role,
             phone: row.phone || null,
-          }).eq("id", data.user.id);
-        }
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Gagal membuat akun");
 
         setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, status: "success" as const, message: "Berhasil" } : r));
         successCount++;
@@ -738,6 +726,7 @@ type Panel = "none" | "add" | "import";
 
 export default function AdminUsersPage() {
   const supabase = createClient();
+  const { isLoading: isAuthLoading } = useAuthStore();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -751,22 +740,38 @@ export default function AdminUsersPage() {
     if (showRefreshing) setRefreshing(true);
     else setLoading(true);
     try {
-      const { data, error } = await supabase
+      const fetchPromise = supabase
         .from("profiles")
         .select("id, full_name, phone, role, is_active, created_at")
         .order("created_at", { ascending: false })
         .limit(200);
+
+      // Timeout fallback 10 seconds
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Supabase fetch timeout")), 10000)
+      );
+
+      const response = await Promise.race([
+        fetchPromise,
+        timeoutPromise
+      ]) as any;
+
+      const { data, error } = response;
       if (error) throw error;
       setUsers((data ?? []) as UserItem[]);
-    } catch {
-      toast.error("Gagal memuat data pengguna");
+    } catch (err: any) {
+      console.error("[loadData] error:", err);
+      toast.error(`Gagal memuat pengguna: ${err?.message || "Kesalahan internal"}`);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { 
+    if (isAuthLoading) return;
+    loadData(); 
+  }, [loadData, isAuthLoading]);
 
   const handleToggleStatus = async (id: string, currentActive: boolean) => {
     setToggling(true);

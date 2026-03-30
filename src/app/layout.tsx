@@ -57,13 +57,6 @@ export const metadata: Metadata = {
       "Kelola presensi, jurnal harian, dan monitoring PKL siswa SMK HASSINA secara digital.",
   },
 
-  // PWA — tetap bisa "Add to Home" tanpa offline cache
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "PKL HASSINA",
-  },
-
 
   // Icons
   icons: {
@@ -106,55 +99,12 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning className={inter.variable}>
       <head>
-        {/* PWA — iOS Safari specific */}
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="PKL HASSINA" />
-
         {/* Preconnect for performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
-        />
-
-        {/* Splash screens — iOS */}
-        <link
-          rel="apple-touch-startup-image"
-          href="/icons/splash-2048x2732.png"
-          media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)"
-        />
-        <link
-          rel="apple-touch-startup-image"
-          href="/icons/splash-1668x2224.png"
-          media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)"
-        />
-        <link
-          rel="apple-touch-startup-image"
-          href="/icons/splash-1536x2048.png"
-          media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)"
-        />
-        <link
-          rel="apple-touch-startup-image"
-          href="/icons/splash-1125x2436.png"
-          media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)"
-        />
-        <link
-          rel="apple-touch-startup-image"
-          href="/icons/splash-1242x2208.png"
-          media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)"
-        />
-        <link
-          rel="apple-touch-startup-image"
-          href="/icons/splash-750x1334.png"
-          media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)"
-        />
-        <link
-          rel="apple-touch-startup-image"
-          href="/icons/splash-640x1136.png"
-          media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)"
         />
       </head>
       <body

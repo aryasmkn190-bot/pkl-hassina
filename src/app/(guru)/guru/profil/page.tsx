@@ -158,12 +158,12 @@ export default function GuruProfilPage() {
       <AnimatePresence>
         {showSignOut && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/40" onClick={() => setShowSignOut(false)} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] bg-black/40" onClick={() => setShowSignOut(false)} />
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="fixed bottom-6 left-4 right-4 z-50 bg-white rounded-3xl p-5 shadow-2xl max-w-sm mx-auto"
+              className="fixed bottom-6 left-4 right-4 z-[60] bg-white rounded-3xl p-5 shadow-2xl max-w-sm mx-auto"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center"><LogOut className="w-5.5 h-5.5 text-red-600" /></div>

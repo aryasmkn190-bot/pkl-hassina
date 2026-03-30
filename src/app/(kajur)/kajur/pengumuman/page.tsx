@@ -32,7 +32,7 @@ const TC: Record<AType, { label: string; color: string; bg: string; emoji: strin
 function Detail({ ann, onClose }: { ann: Ann; onClose: () => void }) {
   const tc = TC[ann.type];
   return (
-    <motion.div initial={{ opacity: 0, x: "100%" }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: "100%" }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }} className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto">
+    <motion.div initial={{ opacity: 0, x: "100%" }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: "100%" }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }} className="fixed inset-0 z-[60] bg-slate-50 overflow-y-auto">
       <header className="sticky top-0 z-10 flex items-center gap-3 px-4 h-[60px] bg-white/90 backdrop-blur-xl border-b border-slate-200/60">
         <button onClick={onClose} className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
           <ArrowLeft className="w-4.5 h-4.5 text-slate-700" strokeWidth={2.5} />

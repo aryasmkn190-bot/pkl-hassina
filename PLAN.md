@@ -34,11 +34,11 @@ Aplikasi **HASSINA PKL** adalah Progressive Web App (PWA) untuk mengelola seluru
 | **Zustand v4** | Client/UI state management |
 | **React Hook Form + Zod** | Form handling + validasi schema |
 
-### PWA & Fitur Native
+### PWA & Fitur Native (Dibatalkan)
 | Teknologi | Alasan |
 |-----------|--------|
-| **@ducanh2912/next-pwa** | PWA manifest, service worker, offline support |
-| **Web Push API** | Push notification ke device (termasuk saat app ditutup) |
+| ~~**@ducanh2912/next-pwa**~~ | ~~PWA manifest, service worker, offline support~~ (Dibatalkan) |
+| ~~**Web Push API**~~ | ~~Push notification ke device (termasuk saat app ditutup)~~ (Dibatalkan) |
 | **MediaDevices API** | Akses kamera untuk selfie presensi |
 | **Geolocation API** | Tracking lokasi real-time |
 | **Leaflet.js** | Peta interaktif untuk visualisasi lokasi |
@@ -569,7 +569,7 @@ documents {
 - [x] Setup Supabase (DB schema, RLS policies, Storage buckets)
 - [x] Autentikasi (login, session, middleware route guard)
 - [x] Design system: warna, typography, komponen dasar
-- [x] PWA manifest + service worker (@ducanh2912/next-pwa, icons, splash, InstallPrompt)
+- [x] ~~PWA manifest + service worker (@ducanh2912/next-pwa, icons, splash, InstallPrompt)~~ (Dibatalkan)
 - [x] Layout per role (bottom nav, sidebar, header)
 
 ### Phase 2 — Fitur Siswa (Core)
@@ -625,9 +625,9 @@ documents {
 - [x] Export Excel — guru penilaian, guru laporan, kajur laporan, admin laporan (lib/export-utils.ts)
 - [x] SQL migration: tabel grades, documents, system_settings, notifications + RLS + Storage bucket
 - [x] Export PDF — guru laporan, guru penilaian, kajur laporan, admin laporan (lib/print-utils.ts via window.print)
-- [x] PWA icons — 22 asset digenerate: icon 72-512px, apple-touch-icon, splash screens, shortcut icons (scripts/generate-icons.mjs)
-- [x] PWA InstallPrompt — A2HS prompt otomatis (Android + iOS), dismiss 7 hari, standalone detection
-- [x] PWA konfigurasi aktif — @ducanh2912/next-pwa, manifest.json, layout meta tags lengkap
+- [x] ~~PWA icons — 22 asset digenerate: icon 72-512px, apple-touch-icon, splash screens, shortcut icons (scripts/generate-icons.mjs)~~ (Dibatalkan)
+- [x] ~~PWA InstallPrompt — A2HS prompt otomatis (Android + iOS), dismiss 7 hari, standalone detection~~ (Dibatalkan)
+- [x] ~~PWA konfigurasi aktif — @ducanh2912/next-pwa, manifest.json, layout meta tags lengkap~~ (Dibatalkan)
 - [x] Optimasi performa — loading.tsx skeleton per group route, lazy import untuk lib berat (xlsx, print-utils)
 - [x] Dark mode — ThemeToggle component (Terang/Gelap/Sistem), CSS variables .dark class, tampil di halaman profil siswa
 - [x] Push dan Commit ke GitHub — semua fitur production-ready ✅

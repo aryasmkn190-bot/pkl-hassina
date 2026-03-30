@@ -801,7 +801,7 @@ function ConfirmSubmitModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/45 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] bg-black/45 backdrop-blur-sm"
             onClick={onCancel}
           />
           <motion.div
@@ -810,7 +810,7 @@ function ConfirmSubmitModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
-            className="fixed z-50 inset-x-4 bottom-20 sm:inset-auto sm:left-1/2 sm:-translate-x-1/2 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm"
+            className="fixed z-[60] inset-x-4 bottom-20 sm:inset-auto sm:left-1/2 sm:-translate-x-1/2 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm"
           >
             <div className="bg-white rounded-3xl p-6 shadow-2xl">
               {/* Icon */}
