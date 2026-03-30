@@ -369,6 +369,13 @@ export default function GuruSiswaPage() {
     try {
       if (!profile?.id) return;
 
+      const { data: teacherRow } = await supabase.from("teachers").select("id").eq("profile_id", profile.id).single();
+      const teacherId = teacherRow?.id;
+      if (!teacherId) {
+        setStudents([]);
+        return;
+      }
+
       const { data: assignments, error } = await supabase
         .from("pkl_assignments")
         .select(`
@@ -388,7 +395,7 @@ export default function GuruSiswaPage() {
           ),
           companies (name, city)
         `)
-        .eq("teacher_id", profile.id)
+        .eq("teacher_id", teacherId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

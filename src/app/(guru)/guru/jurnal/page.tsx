@@ -345,11 +345,18 @@ export default function GuruJurnalPage() {
     try {
       if (!profile?.id) return;
 
+      const { data: teacherRow } = await supabase.from("teachers").select("id").eq("profile_id", profile.id).single();
+      const teacherId = teacherRow?.id;
+      if (!teacherId) {
+        setJournals([]);
+        return;
+      }
+
       // Ambil assignment & student info
       const { data: assignments } = await supabase
         .from("pkl_assignments")
         .select("id, students(id, nis, profiles(full_name))")
-        .eq("teacher_id", profile.id)
+        .eq("teacher_id", teacherId)
         .eq("status", "active");
 
       if (!assignments || assignments.length === 0) {

@@ -49,11 +49,15 @@ export default function GuruLaporanPage() {
     try {
       if (!profile?.id) return;
 
+      const { data: teacherRow } = await supabase.from("teachers").select("id").eq("profile_id", profile.id).single();
+      const teacherId = teacherRow?.id;
+      if (!teacherId) return;
+
       // Ambil semua assignment guru
       const { data: assignments } = await supabase
         .from("pkl_assignments")
         .select("id, status, students(id)")
-        .eq("teacher_id", profile.id);
+        .eq("teacher_id", teacherId);
 
       if (!assignments || assignments.length === 0) {
         setStats({

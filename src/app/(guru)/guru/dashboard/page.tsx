@@ -873,6 +873,17 @@ export default function GuruDashboardPage() {
 
       const placeholder = getPlaceholderData();
 
+      const { data: teacherRow } = await supabase
+        .from("teachers")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+      const teacherId = teacherRow?.id;
+      if (!teacherId) {
+        setData(getPlaceholderData());
+        return;
+      }
+
       // ── 1. Ambil daftar siswa yang dibimbing guru ini ──
       const { data: assignments } = await supabase
         .from("pkl_assignments")
@@ -888,7 +899,7 @@ export default function GuruDashboardPage() {
           ),
           companies (name)
         `)
-        .eq("teacher_id",  profile.id)
+        .eq("teacher_id", teacherId)
         .in("status", ["active", "completed"]);
 
       const todayStr = new Date().toISOString().split("T")[0];

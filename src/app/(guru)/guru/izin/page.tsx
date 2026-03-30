@@ -316,11 +316,18 @@ export default function GuruIzinPage() {
     try {
       if (!profile?.id) return;
 
+      const { data: teacherRow } = await supabase.from("teachers").select("id").eq("profile_id", profile.id).single();
+      const teacherId = teacherRow?.id;
+      if (!teacherId) {
+        setItems([]);
+        return;
+      }
+
       // Ambil siswa yang dibimbing guru ini
       const { data: assignments } = await supabase
         .from("pkl_assignments")
         .select("id, students(id, nis, profiles(full_name), classes(name)), companies(name)")
-        .eq("teacher_id", profile.id)
+        .eq("teacher_id", teacherId)
         .eq("status", "active");
 
       if (!assignments || assignments.length === 0) {
