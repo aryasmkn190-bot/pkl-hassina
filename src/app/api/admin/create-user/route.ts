@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: createError.message }, { status: 400 });
     }
 
-    // 4. Update profile with role & phone
+    // 4. Update profile with role & phone, then create role-specific record
     if (newUser.user) {
       await adminClient
         .from("profiles")
@@ -65,6 +65,20 @@ export async function POST(request: NextRequest) {
           phone: phone?.trim() || null,
         })
         .eq("id", newUser.user.id);
+
+      // Auto-create teachers record for guru_pembimbing
+      if (role === "guru_pembimbing") {
+        await adminClient.from("teachers").upsert({
+          profile_id: newUser.user.id,
+        }, { onConflict: "profile_id" });
+      }
+
+      // Auto-create students record for siswa
+      if (role === "siswa") {
+        await adminClient.from("students").upsert({
+          profile_id: newUser.user.id,
+        }, { onConflict: "profile_id" });
+      }
     }
 
     return NextResponse.json({
