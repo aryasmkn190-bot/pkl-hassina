@@ -18,6 +18,7 @@ interface Assignment {
   student_id: string;
   teacher_id: string | null;
   company_id: string | null;
+  pkl_period_id: string | null;
   status: Status;
   start_date: string | null;
   end_date: string | null;
@@ -31,6 +32,7 @@ interface Assignment {
 interface Student { id: string; name: string; nis: string; class_name: string; }
 interface Teacher { id: string; name: string; }
 interface Company { id: string; name: string; city: string | null; }
+interface Period { id: string; name: string; start_date: string; end_date: string; }
 
 const STATUS_CFG: Record<Status, { label: string; color: string; bg: string; icon: React.ElementType }> = {
   active:    { label: "Aktif",      color: "text-emerald-700", bg: "bg-emerald-50", icon: CheckCircle2 },
@@ -46,6 +48,7 @@ function AssignmentForm({
   students,
   teachers,
   companies,
+  periods,
   onClose,
   onSave,
 }: {
@@ -53,6 +56,7 @@ function AssignmentForm({
   students: Student[];
   teachers: Teacher[];
   companies: Company[];
+  periods: Period[];
   onClose: () => void;
   onSave: (data: Partial<Assignment>) => Promise<void>;
 }) {
@@ -144,19 +148,41 @@ function AssignmentForm({
           </select>
         </div>
 
-        {/* Tanggal */}
+        {/* Tanngal & Periode */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Periode PKL</p>
-          <div className="grid grid-cols-2 gap-3">
+          <select
+            value={form.pkl_period_id ?? ""}
+            onChange={(e) => {
+              const pId = e.target.value;
+              const per = periods.find(p => p.id === pId);
+              setForm(prev => ({
+                ...prev,
+                pkl_period_id: pId || null,
+                start_date: per ? per.start_date : prev.start_date,
+                end_date: per ? per.end_date : prev.end_date,
+              }));
+            }}
+            className="w-full text-sm text-slate-800 outline-none bg-transparent mb-2"
+          >
+            <option value="">-- Ketik manual (Tidak pilih periode) --</option>
+            {periods.map((p) => (
+              <option key={p.id} value={p.id}>{p.name} ({formatDate(p.start_date, "MMM yyyy")} - {formatDate(p.end_date, "MMM yyyy")})</option>
+            ))}
+          </select>
+
+          <div className="grid grid-cols-2 gap-3 mt-3">
             <div>
               <p className="text-[11px] text-slate-400 mb-1">Tanggal Mulai</p>
               <input type="date" value={form.start_date ?? ""} onChange={(e) => set("start_date", e.target.value || null)}
-                className="w-full text-sm text-slate-800 outline-none bg-transparent" />
+                disabled={!!form.pkl_period_id}
+                className="w-full text-sm text-slate-800 outline-none bg-transparent disabled:opacity-60" />
             </div>
             <div>
               <p className="text-[11px] text-slate-400 mb-1">Tanggal Selesai</p>
               <input type="date" value={form.end_date ?? ""} onChange={(e) => set("end_date", e.target.value || null)}
-                className="w-full text-sm text-slate-800 outline-none bg-transparent" />
+                disabled={!!form.pkl_period_id}
+                className="w-full text-sm text-slate-800 outline-none bg-transparent disabled:opacity-60" />
             </div>
           </div>
         </div>
@@ -190,6 +216,7 @@ export default function AdminPenugasanPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [periods, setPeriods] = useState<Period[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
@@ -201,11 +228,11 @@ export default function AdminPenugasanPage() {
     else setLoading(true);
 
     try {
-      const [assignRes, studRes, teachRes, compRes] = await Promise.all([
+      const [assignRes, studRes, teachRes, compRes, periodRes] = await Promise.all([
         supabase
           .from("pkl_assignments")
           .select(`
-            id, status, start_date, end_date,
+            id, status, start_date, end_date, pkl_period_id,
             student_id, teacher_id, company_id,
             students(nis, profiles(full_name), classes(name)),
             teachers(profiles(full_name)),
@@ -226,6 +253,10 @@ export default function AdminPenugasanPage() {
           .select("id, name, city")
           .eq("is_active", true)
           .order("name"),
+        supabase
+          .from("pkl_periods")
+          .select("id, name, start_date, end_date")
+          .order("start_date", { ascending: false }),
       ]);
 
       // Parse assignments
@@ -238,6 +269,7 @@ export default function AdminPenugasanPage() {
           student_id: a.student_id ?? "",
           teacher_id: a.teacher_id,
           company_id: a.company_id,
+          pkl_period_id: a.pkl_period_id,
           status: a.status as Status,
           start_date: a.start_date,
           end_date: a.end_date,
@@ -263,6 +295,7 @@ export default function AdminPenugasanPage() {
       })));
 
       setCompanies((compRes.data ?? []) as Company[]);
+      setPeriods((periodRes.data ?? []) as Period[]);
     } catch (err) {
       console.error("adminPenugasan error:", err);
       toast.error("Gagal memuat data penugasan");
@@ -280,6 +313,7 @@ export default function AdminPenugasanPage() {
         student_id: data.student_id,
         teacher_id: data.teacher_id,
         company_id: data.company_id,
+        pkl_period_id: data.pkl_period_id || null,
         status: data.status ?? "active",
         start_date: data.start_date,
         end_date: data.end_date,
@@ -305,6 +339,7 @@ export default function AdminPenugasanPage() {
           student_id: payload.student_id ?? "",
           teacher_id: payload.teacher_id ?? null,
           company_id: payload.company_id ?? null,
+          pkl_period_id: payload.pkl_period_id ?? null,
           status: payload.status as Status,
           start_date: payload.start_date ?? null,
           end_date: payload.end_date ?? null,
@@ -481,6 +516,7 @@ export default function AdminPenugasanPage() {
             students={students}
             teachers={teachers}
             companies={companies}
+            periods={periods}
             onClose={() => setEditTarget(undefined)}
             onSave={handleSave}
           />
