@@ -917,7 +917,7 @@ export default function GuruDashboardPage() {
       const { data: todayAttendance } = studentIds.length
         ? await supabase
             .from("attendance")
-            .select("student_id, type, status, created_at, location_address")
+            .select("student_id, type, status, created_at, address")
             .in("student_id", studentIds)
             .eq("date", todayStr)
         : { data: [] };
@@ -927,7 +927,7 @@ export default function GuruDashboardPage() {
         ? await supabase
             .from("attendance")
             .select(`
-              id, type, status, created_at, location_address,
+              id, type, status, created_at, address,
               students (profiles (full_name, avatar_url))
             `)
             .in("pkl_assignment_id", assignmentIds)
@@ -1019,7 +1019,7 @@ export default function GuruDashboardPage() {
           type: att.type as "check_in" | "check_out",
           time: new Date(att.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
           date: todayStr,
-          location: (att as unknown as { location_address: string | null }).location_address,
+          location: (att as unknown as { address: string | null }).address,
         };
       });
 

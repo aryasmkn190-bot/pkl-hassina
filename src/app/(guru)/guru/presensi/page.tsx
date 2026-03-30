@@ -315,7 +315,7 @@ export default function GuruPresensiPage() {
       // Ambil catatan kehadiran berdasarkan assignment
       const { data: attData, error } = await supabase
         .from("attendance")
-        .select("id, student_id, date, type, status, location_address, is_within_radius, selfie_url, created_at")
+        .select("id, student_id, date, type, status, address, is_within_radius, selfie_url, created_at")
         .in("pkl_assignment_id", assignmentIds)
         .order("created_at", { ascending: false })
         .limit(100);
@@ -335,7 +335,7 @@ export default function GuruPresensiPage() {
           company_name: info.company,
           date: att.date,
           type: att.type as AttType,
-          address: att.location_address ?? null,
+          address: att.address ?? null,
           is_within_radius: att.is_within_radius ?? false,
           status: att.status as AttStatus,
           selfie_url: att.selfie_url ?? null,
