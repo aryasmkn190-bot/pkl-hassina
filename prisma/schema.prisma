@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum Role {
+  SISWA
+  PEMBIMBING
+  ADMIN
+  SUPERADMIN
+}
+enum AbsensiStatus {
+  HADIR
+  IZIN
+  SAKIT
+  ALPHA
+}
+enum JurnalStatus {
+  DRAFT
+  TERKIRIM
+  DISETUJUI
+  REVISI
+}
+enum JurnalKomentarRole {
+  SISWA
+  PEMBIMBING
+  ADMIN
+  SUPERADMIN
+}
+enum AjuanType {
+  TERLEWAT
+  IZIN
+  SAKIT
+}
+enum AjuanStatus {
+  MENUNGGU
+  DISETUJUI
+  DITOLAK
+}
+model User {
+  id                 String   @id @default(cuid())
+  role               Role
+  email              String?  @unique
+  nis                String?  @unique
+  name               String
+  passwordHash       String
+  mustChangePassword Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  siswaBimbingan     Siswa[]
+}
+model Siswa {
+  id           String  @id @default(cuid())
+  nis          String  @unique
+  name         String
+  kelas        String
+  jurusan      String
+  foto         String?
+  noHp         String?
+  dudiId       String
+  dudi         Dudi    @relation(fields: [dudiId], references: [id])
+  pembimbingId String?
+  pembimbing   User?   @relation(fields: [pembimbingId], references: [id])
+  absensi    Absensi[]
+  ajuanAbsensi AbsensiAjuan[]
+  jurnal     Jurnal[]
+  createdAt    DateTime @default(now())
+}
+model Dudi {
+  id          String              @id @default(cuid())
+  name        String
+  alamat      String
+  kategori    String?
+  deskripsi   String?             @db.Text
+  pimpinan    String?
+  noTelp      String?
+  lat         Float
+  lng         Float
+  radiusM     Int                 @default(150)
+  kuota       Int                 @default(10)
+  siswa       Siswa[]
+  rekomendasi JurnalRekomendasi[]
+  createdAt   DateTime            @default(now())
+}
+model Absensi {
+  id         String       @id @default(cuid())
+  siswaId    String
+  siswa      Siswa        @relation(fields: [siswaId], references: [id])
+  tanggal    DateTime     @db.Date
+  jamMasuk   String?
+  jamPulang  String?
+  status     AbsensiStatus
+  lat        Float?
+  lng        Float?
+  jarakM     Int?
+  fotoMasuk  String?
+  fotoPulang String?
+  catatan    String?
+  createdAt  DateTime     @default(now())
+  @@unique([siswaId, tanggal])
+}
+model AbsensiAjuan {
+  id         String      @id @default(cuid())
+  siswaId    String
+  siswa      Siswa       @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  tanggal    DateTime    @db.Date
+  type       AjuanType
+  alasan     String      @db.Text
+  buktiFoto  String?
+  status     AjuanStatus @default(MENUNGGU)
+  feedback   String?     @db.Text
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  @@unique([siswaId, tanggal, type])
+}
+model Jurnal {
+  id         String           @id @default(cuid())
+  siswaId    String
+  siswa      Siswa            @relation(fields: [siswaId], references: [id])
+  tanggal    DateTime
+  judul      String
+  kegiatan   String           @db.Text
+  kendala    String?          @db.Text
+  jamMulai   String?
+  jamSelesai String?
+  foto       String[]
+  status     JurnalStatus     @default(DISETUJUI)
+  feedback   String?          @db.Text
+  komentar   JurnalKomentar[]
+  createdAt  DateTime         @default(now())
+}
+model JurnalRekomendasi {
+  id        String   @id @default(cuid())
+  dudiId    String
+  dudi      Dudi     @relation(fields: [dudiId], references: [id], onDelete: Cascade)
+  tanggal   DateTime @db.Date
+  items     Json
+  createdAt DateTime @default(now())
+  @@unique([dudiId, tanggal])
+}
+
+model JurnalKomentar {
+  id         String           @id @default(cuid())
+  jurnalId   String
+  jurnal     Jurnal           @relation(fields: [jurnalId], references: [id], onDelete: Cascade)
+  siswaId    String?
+  authorId   String
+  authorRole JurnalKomentarRole
+  authorName String
+  isi        String           @db.Text
+  parentId   String?
+  parent     JurnalKomentar?  @relation("KomentarReply", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    JurnalKomentar[] @relation("KomentarReply")
+  createdAt  DateTime         @default(now())
+  @@index([jurnalId, createdAt])
+}

@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  --palette-primary: #7c3aed;
+  --palette-primary-hover: #6d28d9;
+  --palette-primary-active: #5b21b6;
+  --palette-primary-subtle: #ede9fe;
+  --palette-primary-muted: rgba(124, 58, 237, 0.2);
+  --palette-primary-bg: rgba(124, 58, 237, 0.1);
+  --palette-warning: #f59e0b;
+  --palette-warning-subtle: #fef3c7;
+  --palette-success: #22c55e;
+  --palette-success-subtle: #dcfce7;
+  --palette-success-active: #15803d;
+  --palette-success-muted: rgba(34, 197, 94, 0.2);
+  --palette-danger: #ef4444;
+  --palette-danger-subtle: #fee2e2;
+  --palette-danger-active: #b91c1c;
+  --palette-background: #eff6ff;
+  --palette-background-muted: #f8fafc;
+  --palette-surface: #ffffff;
+  --palette-surface-muted: #f9fafb;
+  --palette-surface-dark: #f3f4f6;
+  --palette-foreground: #1f2937;
+  --palette-foreground-secondary: #374151;
+  --palette-foreground-muted: #607080;
+  --palette-foreground-ink: #111827;
+  --palette-border: #e5e7eb;
+  --palette-border-subtle: #f3f4f6;
+  --elevation-level1: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+}
+* { font-family: Inter, system-ui, -apple-system, sans-serif; }
+body { background: var(--palette-background); color: var(--palette-foreground); }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
