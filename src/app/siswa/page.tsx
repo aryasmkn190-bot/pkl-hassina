@@ -671,31 +671,102 @@ function RekomendasiHarian({ onJurnalCreated }: { onJurnalCreated: ()=>void }) {
   );
 }
 function AbsensiModern(props: { profilData: unknown; absenBusy: boolean; triggerAbsen: (m: "masuk" | "pulang")=>void; pop: (m: string)=>void }) {
+  const [mode, setMode] = React.useState<"MASUK"|"IZIN"|"SAKIT">("MASUK");
+  const [alasan, setAlasan] = React.useState("");
+  const [file, setFile] = React.useState<File|null>(null);
+  const [busy, setBusy] = React.useState(false);
+  const todayStr = new Date().toLocaleString("en-CA",{timeZone:"Asia/Jakarta"}).slice(0,10);
+  const [nowTick, setNowTick] = React.useState(()=> new Date().toLocaleString("id-ID",{ timeZone:"Asia/Jakarta", weekday:"long", day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit"}));
+  React.useEffect(()=>{ const id=setInterval(()=> setNowTick(new Date().toLocaleString("id-ID",{ timeZone:"Asia/Jakarta", weekday:"long", day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit"})), 1000); return ()=>clearInterval(id); },[]);
+  async function submitAjuan(type: "IZIN"|"SAKIT"|"TERLEWAT"){
+    if(!alasan.trim()) return props.pop("Isi alasan.");
+    setBusy(true);
+    try{
+      const fd=new FormData(); fd.set("type", type); fd.set("tanggal", todayStr); fd.set("alasan", alasan.trim()); if(file) fd.set("foto", file);
+      const r=await fetch("/api/absensi/ajuan",{method:"POST", body: fd}); const j=await r.json().catch(()=>({})); if(!r.ok) return props.pop(j.error ?? "Gagal ajuan");
+      props.pop(type==="TERLEWAT" ? "Ajuan terlewat dikirim ✓ — menunggu pembimbing" : `${type} dikirim ✓ — menunggu pembimbing`); setAlasan(""); setFile(null);
+    } finally{ setBusy(false); }
+  }
   return (
-    <div className="rounded-2xl p-4 space-y-3" style={{ background:"var(--palette-surface)", border:"1px solid var(--palette-border)", boxShadow:"var(--elevation-level1)" }}>
-      <p className="text-[13px] font-bold" style={{ color:"var(--palette-foreground-ink)" }}>Absensi hari ini</p>
-      <div className="grid grid-cols-2 gap-2">
-        <button disabled={props.absenBusy} onClick={()=>props.triggerAbsen("masuk")} className="rounded-full py-3 text-sm font-bold text-white disabled:opacity-40" style={{ background:"var(--palette-primary)" }}>{props.absenBusy?"...":"Masuk · selfie GPS"}</button>
-        <button disabled={props.absenBusy} onClick={()=>props.triggerAbsen("pulang")} className="rounded-full py-3 text-sm font-bold" style={{ background:"white", border:"1px solid var(--palette-border)" }}>Pulang</button>
+    <div className="space-y-3">
+      <div className="rounded-2xl p-4" style={{ background:"var(--palette-surface)", border:"1px solid var(--palette-border)", boxShadow:"var(--elevation-level1)" }}>
+        <p className="text-[13px] font-bold" style={{ color:"var(--palette-foreground-ink)" }}>Absensi hari ini</p>
+        <p className="text-[11px] mt-1" style={{ color:"var(--palette-foreground-muted)" }}>{nowTick} WIB</p>
+        <div className="mt-3 flex gap-1.5 p-1 rounded-full" style={{ background:"var(--palette-surface-muted)" }}>
+          {(["MASUK","IZIN","SAKIT"] as const).map(m=>(
+            <button key={m} onClick={()=>setMode(m)} className={`flex-1 rounded-full py-2 text-[12px] font-bold ${mode===m ? "bg-white shadow text-[var(--palette-primary)]" : ""}`} style={mode===m ? { color:"var(--palette-primary)", boxShadow:"0 1px 4px rgba(0,0,0,0.08)" } : { color:"var(--palette-foreground-muted)" }}>{m==="MASUK" ? "Masuk" : m==="IZIN" ? "Izin" : "Sakit"}</button>
+          ))}
+        </div>
+        {mode==="MASUK" ? (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button disabled={props.absenBusy} onClick={()=>props.triggerAbsen("masuk")} className="rounded-full py-3 text-sm font-bold text-white disabled:opacity-40 flex items-center justify-center gap-1.5" style={{ background:"var(--palette-primary)" }}><span>◉</span> {props.absenBusy?"...":"Masuk · selfie"}</button>
+            <button disabled={props.absenBusy} onClick={()=>props.triggerAbsen("pulang")} className="rounded-full py-3 text-sm font-bold" style={{ background:"white", border:"1px solid var(--palette-border)" }}>Pulang</button>
+          </div>
+        ) : (
+          <div className="mt-3 space-y-2.5">
+            <p className="text-[11px] font-bold" style={{ color:"var(--palette-foreground-muted)" }}>{mode==="IZIN" ? "Ajukan izin hari ini" : "Ajukan sakit hari ini"} — alasan + bukti foto (opsional, maks 5MB)</p>
+            <textarea value={alasan} onChange={e=>setAlasan(e.target.value)} placeholder={mode==="IZIN" ? "Contoh: izin keperluan keluarga..." : "Contoh: demam, sudah ke puskesmas..."} rows={2} className="w-full rounded-2xl px-4 py-3 text-sm outline-none" style={{ background:"var(--palette-surface-muted)", border:"1px solid var(--palette-border)" }} />
+            <input type="file" accept="image/*" onChange={e=>setFile(e.target.files?.[0] ?? null)} className="block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-[var(--palette-primary)] file:text-white file:px-4 file:py-2 file:text-xs file:font-bold" style={{ color:"var(--palette-foreground-muted)" }} />
+            {file && <p className="text-[11px] truncate" style={{ color:"var(--palette-foreground-muted)" }}>Terpilih: {file.name} · {(file.size/1024).toFixed(0)}KB</p>}
+            <button disabled={busy} onClick={()=>submitAjuan(mode as "IZIN"|"SAKIT")} className="w-full rounded-full py-3 text-sm font-bold text-white disabled:opacity-40" style={{ background:"var(--palette-primary)" }}>{busy?"...": mode==="IZIN" ? "Kirim izin" : "Kirim sakit"}</button>
+            <button disabled={busy} onClick={()=>submitAjuan("TERLEWAT")} className="w-full rounded-full py-2.5 text-[12px] font-bold" style={{ background:"white", border:"1px solid var(--palette-border)" }}>Ajukan terlewat (kemarin/lupa absen)</button>
+          </div>
+        )}
+      </div>
+      <div className="rounded-2xl p-3 flex items-center gap-2" style={{ background:"var(--palette-primary-subtle)", border:"1px solid var(--palette-border)" }}>
+        <span className="w-7 h-7 rounded-full grid place-items-center text-white text-[11px]" style={{ background:"var(--palette-primary)" }}>◷</span>
+        <p className="text-[11px] leading-snug" style={{ color:"var(--palette-foreground-ink)" }}><b>GPS high-accuracy 20s</b> · selfie wajib dalam radius DUDI · di luar radius ditolak.</p>
       </div>
     </div>
   );
 }
 function RiwayatAbsensi(props: { pop: (m: string)=>void }) {
-  const [rows, setRows] = React.useState<Array<{tanggal:string; status:string}>>([]);
-  React.useEffect(()=>{ (async()=>{
+  const [rows, setRows] = React.useState<Array<{tanggal:string; status:string; alasan?:string|null; buktiFoto?:string|null}>>([]);
+  const [ajuan, setAjuan] = React.useState<Array<{tanggal:string; type:string; status:string}>>([]);
+  const [from, setFrom] = React.useState(()=>{ const d=new Date(); d.setDate(d.getDate()-14); return d.toISOString().slice(0,10); });
+  const [to, setTo] = React.useState(()=> new Date().toISOString().slice(0,10));
+  const [detail, setDetail] = React.useState<null | {tanggal:string; status:string; alasan?:string|null}>(null);
+  const load = React.useCallback(async()=>{
     try{
-      const now=new Date(); const from=new Date(now); from.setDate(now.getDate()-14);
-      const qs=`from=${from.toISOString().slice(0,10)}&to=${now.toISOString().slice(0,10)}`;
+      const qs=`from=${from}&to=${to}`;
       const r=await fetch(`/api/absensi?${qs}`); const j=await r.json().catch(()=>({}));
-      if(Array.isArray(j.data)) setRows(j.data.map((x:any)=>({ tanggal: x.tanggalIso ?? x.tanggal, status: x.status })));
+      if(Array.isArray(j.data)) setRows(j.data.map((x:any)=>({ tanggal: x.tanggalIso ?? new Date(x.tanggal).toISOString().slice(0,10), status: x.status, alasan: x.alasan ?? null, buktiFoto: x.buktiFoto ?? null })));
+      const r2=await fetch(`/api/absensi/ajuan?from=${from}&to=${to}`); const j2=await r2.json().catch(()=>({}));
+      if(Array.isArray(j2.data)) setAjuan(j2.data.map((x:any)=>({ tanggal: x.tanggalIso ?? new Date(x.tanggal).toISOString().slice(0,10), type: x.type, status: x.status })));
     }catch{}
-  })(); },[]);
-  if(rows.length===0) return null;
+  },[from,to]);
+  React.useEffect(()=>{ load(); },[load]);
+  if(rows.length===0 && ajuan.length===0) return null;
+  const byDate: Record<string,string> = {};
+  for(const r of rows) byDate[r.tanggal]=r.status;
+  for(const a of ajuan){ if(!byDate[a.tanggal]) byDate[a.tanggal]= a.status==="MENUNGGU" ? "MENUNGGU" : a.type; }
+  const dates = Object.keys(byDate).sort().slice(-21);
   return (
-    <div className="rounded-2xl p-4" style={{ background:"var(--palette-surface)", border:"1px solid var(--palette-border)", boxShadow:"var(--elevation-level1)" }}>
-      <p className="text-[13px] font-bold" style={{ color:"var(--palette-foreground-ink)" }}>Riwayat 14 hari</p>
-      <div className="mt-2 grid grid-cols-7 gap-1 text-center text-[10px]">{rows.slice(0,14).map((r,i)=><div key={i} className="rounded-lg py-1.5" style={{ background: r.status==="HADIR" ? "var(--palette-success-subtle)" : r.status==="ALPHA" ? "#fef2f2" : "var(--palette-surface-muted)" }}>{r.tanggal.slice(5)}</div>)}</div>
+    <div className="space-y-3">
+      <div className="rounded-2xl p-4" style={{ background:"var(--palette-surface)", border:"1px solid var(--palette-border)", boxShadow:"var(--elevation-level1)" }}>
+        <div className="flex items-center justify-between"><p className="text-[13px] font-bold" style={{ color:"var(--palette-foreground-ink)" }}>Riwayat — tap untuk detail</p><button onClick={load} className="text-[11px] font-bold" style={{ color:"var(--palette-primary)" }}>Muat ulang</button></div>
+        <div className="mt-3 flex gap-2">
+          <div className="flex-1"><p className="text-[10px] font-bold" style={{ color:"var(--palette-foreground-muted)"}}>Dari</p><input type="date" value={from} onChange={e=>setFrom(e.target.value)} className="mt-1 w-full rounded-full px-3 py-2 text-sm outline-none" style={{ border:"1px solid var(--palette-border)" }} /></div>
+          <div className="flex-1"><p className="text-[10px] font-bold" style={{ color:"var(--palette-foreground-muted)"}}>Sampai</p><input type="date" value={to} onChange={e=>setTo(e.target.value)} className="mt-1 w-full rounded-full px-3 py-2 text-sm outline-none" style={{ border:"1px solid var(--palette-border)" }} /></div>
+        </div>
+        <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[10px]">{dates.map((d,i)=>{
+          const s=byDate[d] ?? "ALPHA";
+          const bg = s==="HADIR" ? "var(--palette-success-subtle)" : s==="ALPHA" ? "#fef2f2" : s==="MENUNGGU" ? "#fff7ed" : s==="IZIN" || s==="SAKIT" ? "white" : "var(--palette-surface-muted)";
+          const color = s==="HADIR" ? "var(--palette-success)" : s==="ALPHA" ? "#dc2626" : s==="MENUNGGU" ? "#ea580c" : "var(--palette-foreground-muted)";
+          return <button key={d} onClick={()=>{ const r=rows.find(x=>x.tanggal===d); const a=ajuan.find(x=>x.tanggal===d); setDetail({ tanggal:d, status: r?.status ?? a?.status ?? s, alasan: r?.alasan ?? (a ? `${a.type}: menunggu` : null) }); }} className="rounded-xl py-2 font-bold" style={{ background:bg, color, border: s==="MENUNGGU" ? "1px solid #fed7aa" : s==="ALPHA" ? "1px solid #fecaca" : "1px solid transparent" }}>{d.slice(5)}<span className="block text-[8px] font-bold leading-none truncate px-1">{s.slice(0,4)}</span></button>;
+        })}</div>
+        <p className="mt-2 text-[10px] text-center" style={{ color:"var(--palette-foreground-muted)"}}>HADIR hijau · ALPHA merah muda (tap → ajukan) · MENUNGGU oranye · IZIN/SAKIT putih</p>
+      </div>
+      {detail && (
+        <div className="fixed inset-0 z-50 bg-black/30 grid place-items-end sm:place-items-center p-0 sm:p-4" onClick={()=>setDetail(null)}>
+          <div className="w-full max-w-[420px] rounded-t-3xl sm:rounded-2xl bg-white p-5" onClick={e=>e.stopPropagation()}>
+            <div className="flex justify-between items-center"><p className="font-bold text-sm">{detail.tanggal} · {detail.status}</p><button onClick={()=>setDetail(null)} className="w-8 h-8 rounded-full grid place-items-center" style={{ background:"var(--palette-surface-muted)" }}>×</button></div>
+            {detail.alasan && <p className="mt-2 text-[12px]" style={{ color:"var(--palette-foreground-secondary)"}}>{detail.alasan}</p>}
+            {detail.status==="ALPHA" && <button onClick={()=>{ setDetail(null); props.pop("Gunakan tab Absensi → Terlewat untuk ajukan."); }} className="mt-3 w-full rounded-full py-2.5 text-sm font-bold text-white" style={{ background:"var(--palette-primary)"}}>Ajukan terlewat</button>}
+            {detail.status==="MENUNGGU" && <p className="mt-3 text-[11px] text-center" style={{ color:"#ea580c"}}>Menunggu persetujuan pembimbing.</p>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
